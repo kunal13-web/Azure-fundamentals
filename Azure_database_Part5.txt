@@ -1,0 +1,120 @@
+
+
+***
+
+## 1. Big picture: Azure database services
+
+1. **Understand why Azure databases exist**  
+   - Azure offers **managed databases** so you do not manage OS, patches, backups, or HA yourself.[3][4]
+   - Main families: **relational (SQL)**, **non‑relational (NoSQL)**, **in‑memory**, **analytics / data warehouse**.[5][1]
+
+2. **Know key Azure services (exam view)**  
+   - **Relational**: Azure SQL Database, Azure SQL Managed Instance, SQL Server on VMs, Azure Database for MySQL/PostgreSQL/MariaDB.[6][1]
+   - **NoSQL**: Azure Cosmos DB (document, key‑value, column‑family, graph), Azure Table Storage.[7][8]
+   - **In‑memory**: Azure Cache for Redis; in‑memory OLTP in Azure SQL.[9][10]
+   - **Analytics**: Azure Synapse Analytics, Azure Databricks; **data lake** with ADLS for raw data.[11][1]
+
+***
+
+## 2. Database categories and workloads
+
+1. **Relational vs non‑relational**  
+   - **Relational**: tables with fixed schema and relationships, queried with SQL, strong ACID support.[4][5]
+   - **Non‑relational (NoSQL)**: flexible schema (documents, key‑value, graph, column‑family), designed for scale and low latency.[12][13]
+
+2. **OLTP vs OLAP workloads**  
+   - **OLTP**: many small transactions (insert/update/delete), high concurrency; used by apps (web, mobile, ERP).[2][4]
+   - **OLAP**: fewer, long‑running analytical queries over large data sets; used by BI and reporting tools (Synapse, Databricks).[2][11]
+
+3. **Time‑series, search, cache**  
+   - **Time‑series**: Azure Data Explorer / Time Series Insights for timestamped metrics and telemetry.[4][11]
+   - **Search**: Azure AI Search for full‑text search over documents and products.[14][1]
+   - **Cache / in‑memory**: Azure Cache for Redis to keep hot data in RAM for ultra‑low latency.[10][9]
+
+***
+
+## 3. Relational & OLTP databases
+
+1. **What is a relational database?**  
+   - Stores data in **tables (rows, columns)** with defined schema; relationships enforced via primary/foreign keys.[15][5]
+   - Ensures **ACID**: Atomicity, Consistency, Isolation, Durability, important for correctness of transactions.[15][2]
+
+2. **OLTP relational DB**  
+   - Optimized for **short, frequent transactions** with many concurrent users (e‑commerce orders, banking transfers).[2][4]
+   - Azure examples: **Azure SQL Database**, **Azure Database for MySQL/PostgreSQL/MariaDB**, **SQL Server on VMs**.[6][4]
+
+3. **Where to use relational vs NoSQL**  
+   - Use **relational** when data is structured and relationships are important (customers ↔ orders ↔ products).[5][4]
+   - Use **NoSQL (Cosmos DB)** when you need schema flexibility, global distribution, huge scale (IoT, gaming, catalogs).[16][7]
+
+***
+
+## 4. RTO, RPO, consistency, in‑memory
+
+1. **RTO (Recovery Time Objective)**  
+   - Max acceptable **downtime** after a failure (e.g., “DB must be back in 30 minutes”).[17][18]
+   - Influences choice of HA features: zones, failover groups, multi‑region deployment.[19][20]
+
+2. **RPO (Recovery Point Objective)**  
+   - Max acceptable **data loss window** measured in time (e.g., “we can lose at most 15 minutes of data”).[18][21]
+   - Influences backup frequency, geo‑replication, continuous backup.[20][19]
+
+3. **Consistency (especially in Cosmos DB)**  
+   - Consistency defines what version of data a read sees when writes are happening.[8][22]
+   - Cosmos DB levels: **Strong, Bounded Staleness, Session (default), Consistent Prefix, Eventual** – stronger = fresher data but higher latency.[22][23]
+
+4. **In‑memory database / cache**  
+   - Stores data **primarily in RAM**, disk used only for persistence, so reads/writes are extremely fast.[24][10]
+   - Azure examples: **Azure Cache for Redis**, in‑memory OLTP in Azure SQL for high‑throughput OLTP tables.[9][10]
+
+***
+
+## 5. Choosing the right Azure DB (scenarios)
+
+Use this mental map when you see scenario‑based questions.[25][4]
+
+1. **Use Azure SQL Database when**  
+   - Need fully managed **relational OLTP**, high availability, and easy scaling for web/line‑of‑business apps.[26][4]
+   - Migrating on‑prem SQL Server with minimal changes (or use SQL Managed Instance if you need near‑full compatibility).[6][4]
+
+2. **Use Azure Database for MySQL / PostgreSQL / MariaDB when**  
+   - App already uses these open‑source engines (LAMP/LEMP, Django, Rails, etc.) and you want a managed version.[25][4]
+   - You prefer their features/eco‑system but want Azure to handle backups, patching, and HA.[27][28]
+
+3. **Use Azure Cosmos DB when**  
+   - Need **global distribution, low latency, huge scale, flexible JSON schema**.[7][16]
+   - Scenarios: IoT telemetry, gaming, user‑generated content, product catalogs, user preferences, event logging.[29][16]
+
+4. **Use Azure Cache for Redis when**  
+   - Need sub‑millisecond access to hot data; use as a cache in front of SQL or Cosmos.[10][9]
+   - Scenarios: session storage, caching query results, leaderboards, pub/sub notifications.[9][10]
+
+5. **Use Synapse / Databricks / Data Lake when**  
+   - Doing **analytics, large‑scale reporting, or ML** on big datasets.[11][2]
+   - Synapse = data warehouse/SQL analytics; Data Lake = raw storage; Databricks = Spark analytics/ML.[8][11]
+
+***
+
+## 6. Hands‑on: create and use databases
+
+### 6.1 Create Azure SQL Database (summary)
+
+1. Portal → **Create a resource → SQL Database**.[30][31]
+2. Set subscription, resource group, DB name; create logical server (name, admin login, password, region).[31][30]
+3. Pick low‑cost compute tier for Dev/Test; review + create.[30][31]
+4. On server → **Networking/Firewalls** → add current client IP to allow your machine.[32][30]
+5. Connect using **Query editor**, SSMS, or Azure Data Studio, then create tables, insert data, run queries.[31][32]
+
+### 6.2 Create Azure Database for MySQL (flexible server) – what you just did
+
+1. Portal → **Create a resource → Azure Database for MySQL → Flexible Server**.[28][33]
+2. Set admin login/password, workload type (Dev/Test for labs), region, compute + storage.[34][28]
+3. After creation, open server → **Networking / Connection security** → allow your client IP (public access for labs).[28][25]
+4. Connect from MySQL Workbench or CLI using:  
+   - Host: `<servername>.mysql.database.azure.com`  
+   - User: `adminuser@servername`  
+   - Port: 3306.[25][28]
+5. Run SQL: `CREATE DATABASE`, `USE`, `CREATE TABLE`, `INSERT`, `SELECT` to verify.[33][25]
+
+***
+

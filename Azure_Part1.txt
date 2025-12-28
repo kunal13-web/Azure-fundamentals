@@ -1,0 +1,80 @@
+# Azure Fundamentals – Personal Notes
+
+## 1. What is Cloud?
+
+- Cloud (cloud computing) means getting IT resources like servers, storage, databases, and software over the internet instead of owning physical hardware.  
+- You “rent” these resources from a provider (like Microsoft Azure) and pay only for what you use.  
+- Everyday examples: OneDrive, Google Drive, Netflix, etc. – your files and apps run in remote data centers, not on your personal machine.
+
+## 2. What is a Data Center?
+
+- A data center is a physical building (or group of buildings) with many servers, storage systems, networking devices, plus power and cooling.  
+- When you use Azure, your applications and data actually live on servers inside Microsoft’s data centers.  
+- Data centers are highly secure, monitored, and designed to run 24/7 with backup power and cooling.
+
+## 3. What is an Azure Region?
+
+- An Azure region is a **geographic area** (for example, Central India, East US, West Europe) containing one or more data centers.  
+- You choose a region to:
+  - Keep data close to users (better latency and performance).  
+  - Meet legal/compliance requirements about data location.  
+  - Use specific services available in that region.
+
+### Region – simple view
+
+
+WORLD
+│
+├── Azure Region: Central India
+│   ├── Data Center A
+│   └── Data Center B
+│
+├── Azure Region: East US
+│   ├── Data Center C
+│   └── Data Center D
+│
+└── Azure Region: West Europe
+    ├── Data Center E
+    └── Data Center F
+```
+
+## 4. What is an Availability Zone?
+
+- An availability zone is a **physically separate location inside a region**, with independent power, cooling, and networking.  
+- Each zone consists of one or more data centers.  
+- Many Azure regions have at least three zones (Zone 1, Zone 2, Zone 3).
+
+### Region with zones – 3D style sketch
+
+```text
+                WORLD
+                  │
+        +-------------------+
+        |  Azure REGION     |   ⇦ Example: Central India
+        |   (Central India) |
+        +-------------------+
+           /       |       \
+          /        |        \
+         v         v         v
+
+   +-----------+  +-----------+  +-----------+
+   | ZONE 1    |  | ZONE 2    |  | ZONE 3    |
+   |           |  |           |  |           |
+   |  ┌─────┐  |  |  ┌─────┐  |  |  ┌─────┐  |
+   |  |DC A|   |  |  |DC C|   |  |  |DC E|   |  ⇦ Data centers
+   |  └─────┘  |  |  └─────┘  |  |  └─────┘  |
+   |  ┌─────┐  |  |  ┌─────┐  |  |  ┌─────┐  |
+   |  |DC B|   |  |  |DC D|   |  |  |DC F|   |
+   |  └─────┘  |  |  └─────┘  |  |  └─────┘  |
+   +-----------+  +-----------+  +-----------+
+```
+
+## 5. Why Regions and Zones Are Needed
+
+- **High Availability / Fault Tolerance**
+  - By running resources (VMs, databases, etc.) in multiple zones within the same region, applications can survive a complete failure of one zone or data center.
+- **Performance**
+  - Choosing a region close to users gives lower latency and faster response times.
+- **Compliance & Data Residency**
+  - Some countries/industries require data to stay within specific geographic boundaries; regions help satisfy these rules.
+

@@ -1,0 +1,213 @@
+
+# Chapter 4 – Azure Storage (AZ‑900 Notes)
+
+## 1. Azure Storage overview
+
+- Azure Storage provides different services to store **objects, files, messages, NoSQL data, and VM disks** in the cloud.[3][1]
+- Main services:  
+  - **Blob Storage** – object storage for files, backups, media.  
+  - **Azure Files** – managed SMB/NFS file shares.  
+  - **Queue Storage** – message queues between components.  
+  - **Table Storage** – key‑value NoSQL store.  
+  - **Disk Storage** – block storage for virtual machine disks.[2][4][1]
+
+***
+
+## 2. Data storage types and use‑case scenarios
+
+### 2.1 Blob Storage (objects)
+
+- Stores **unstructured data** like images, videos, backups, logs.[1]
+- Accessed via HTTP/HTTPS; supports hot, cool, archive tiers for cost optimization.[4]
+
+**Scenarios**  
+- Host website images, PDFs, videos.  
+- Store application logs and DB backups; move old backups to Cool/Archive tier to save cost.[4][1]
+
+***
+
+### 2.2 Azure Files (file system)
+
+- Provides **fully managed file shares** accessible via SMB or NFS.[5][6]
+- Can be mounted by Azure VMs and on‑prem servers at the same time; behaves like `\\server\share` or a mounted drive.[7][8]
+
+**Scenarios**  
+- Lift‑and‑shift on‑prem Windows file server to Azure without changing user experience.  
+- Shared configuration or app files used by multiple VMs.[6][8]
+
+***
+
+### 2.3 Queue Storage
+
+- Simple **message queue** service for building decoupled, reliable apps.[3][1]
+
+**Scenario**  
+- Front‑end API writes orders to the queue; back‑end worker reads and processes messages asynchronously (microservices pattern).  
+
+***
+
+### 2.4 Table Storage (NoSQL key‑value)
+
+- NoSQL store for **large amounts of semi‑structured data**: key‑value entities, schema‑less.[1][4]
+
+**Scenario**  
+- Store millions of IoT sensor readings, telemetry, logs where you need fast lookups and huge scale but simple structure.  
+
+***
+
+### 2.5 Disk Storage (block storage)
+
+- VM **OS and data disks**; stored as managed disks (virtual hard disks).[9][2]
+- Disk SKUs: Standard HDD, Standard SSD, Premium SSD, Ultra Disk → choose based on performance and cost.  
+
+**Scenario**  
+- OS disk for VM and data disks for SQL Server / application data needing consistent IOPS and low latency.  
+
+***
+
+## 3. Data redundancy options
+
+Azure automatically keeps **multiple copies** of your data; you choose redundancy at storage account (or disk) level.[10][2]
+
+- **LRS (Locally Redundant Storage)**  
+  - 3 copies inside a single datacenter in one region.  
+  - Protects from hardware failure, not from datacenter outage.  
+  - Cheapest; OK for dev/test and non‑critical data.[2][3]
+
+- **ZRS (Zone‑Redundant Storage)**  
+  - Synchronously replicates data across **3 availability zones** in one region.  
+  - Survives zone‑level failures; good for production workloads needing high availability in one region.[10][2]
+
+- **GRS (Geo‑Redundant Storage)**  
+  - LRS in primary region + asynchronous copy to paired region (same geography).[11][10]
+  - Protects from regional disasters; secondary is not readable by default.  
+
+- **RA‑GRS (Read‑Access GRS)**  
+  - GRS plus **read access** to secondary endpoint – can offload read‑only traffic or use in DR reading scenarios.[2][10]
+
+- **GZRS / RA‑GZRS (Geo‑Zone‑Redundant)**  
+  - Combines ZRS in primary region with cross‑region replication.  
+  - Highest durability; RA‑GZRS adds read access to secondary.[10]
+
+**Exam tip:** more critical data → stronger redundancy (ZRS/GZRS/RA‑GZRS); lab/non‑critical → LRS often enough.  
+
+***
+
+## 4. Region pairs (paired regions)
+
+- Azure groups regions into **pairs within the same geography**, e.g. **East US ↔ West US**, **North Europe ↔ West Europe**.[12][11]
+- Benefits:  
+  - Cross‑region replication for services like GRS/RA‑GRS.  
+  - Platform updates are rolled out to only one region in the pair at a time.  
+  - In a large outage, Azure prioritizes **bringing at least one region in each pair back first**.[13][11]
+
+Paired regions are chosen by Microsoft; customers design DR and replication using the pair.  
+
+***
+
+## 5. Block storage and Managed vs Unmanaged disks
+
+### 5.1 Block storage (disks)
+
+- Azure VM disks are **block storage**: data is stored in blocks on virtual disks (VHDs), then formatted with a file system (NTFS, ext4) by the OS.[9][2]
+- Used for OS disks and high‑performance data disks (databases, logs).  
+
+### 5.2 Unmanaged disks (legacy)
+
+- Old model: each disk is a **VHD page blob in a storage account** you manage.  
+- You create/manage storage accounts, monitor IOPS and capacity limits, and plan distribution across accounts.[14][9]
+- More control but complex and easier to hit limits; now being retired.[15]
+
+### 5.3 Managed disks (recommended)
+
+- Azure abstracts storage accounts; you only choose **disk type and size**.[16][9]
+- Azure automatically handles placement, redundancy, scale units, and performance isolation.  
+- Integrates well with Availability Sets/Zones, backup, and encryption.  
+
+**Key comparison (exam view)**  
+- Managed disks → simplified management, high scalability, recommended for new deployments.  
+- Unmanaged disks → you manage storage accounts and VHDs; more complex and legacy.[14][16][9]
+
+***
+
+## 6. Creating a VM and attaching storage (lab steps)
+
+### 6.1 Create VM
+
+1. Portal → **Virtual machines → + Create → Azure virtual machine**.[17]
+2. Basics: subscription, resource group, VM name (`vm-with-disk`), region, image (Ubuntu/Windows), size, admin account, open SSH (22) or RDP (3389).[17]
+
+### 6.2 Add data disk (block storage)
+
+1. On **Disks** tab: choose OS disk type (Standard/Premium SSD).  
+2. Under **Data disks**, click **+ Create and attach a new disk**.  
+3. Set name (`vm-data-disk1`), type (Standard/Premium), and size.  
+4. Finish wizard → **Review + create → Create**.[9][2]
+
+After deployment, VM → **Disks** shows OS disk + attached data disk. Initialize/format disk inside OS (Disk Management on Windows; `lsblk` + `mkfs` + mount on Linux).  
+
+***
+
+## 7. Azure Storage Explorer and AzCopy
+
+### 7.1 Azure Storage Explorer (GUI)
+
+- Free **desktop GUI** app to manage Azure Storage: blobs, files, queues, tables, Data Lake.[18][19]
+- Features:  
+  - Connect via Azure login, connection string, SAS.  
+  - Drag‑and‑drop upload/download, create containers/shares, view queue messages/table entities.  
+  - Generate SAS tokens and manage access.[20][21][18]
+
+**Use when:** you want interactive, visual management of storage.  
+
+### 7.2 AzCopy (CLI)
+
+- **Command‑line** tool for fast data transfer to/from Azure Storage (Blobs and Files).[22][23]
+- Supports local ↔ Azure, Azure ↔ Azure, recursive folder copy, sync, resumable transfers.[24][22]
+- Ideal for large migrations, automated backups, script/CI pipelines.  
+
+Note: Storage Explorer uses AzCopy under the hood for many transfer operations.  
+
+***
+
+## 8. Azure Files and Azure File Sync
+
+### 8.1 Azure Files (managed SMB/NFS shares)
+
+- Cloud file shares using **SMB/NFS**, accessible from Windows, Linux, and macOS.[5][6]
+- No need to manage file server VMs; Azure provides the file service with chosen redundancy.  
+
+**Scenarios**  
+- Department shares, home folders.  
+- Shared config for multiple VMs.  
+- Replacing on‑prem file servers.  
+
+### 8.2 Azure File Sync (hybrid file system)
+
+- Sync engine that keeps **on‑prem Windows Server shares** and an **Azure Files share** in sync.[25][26]
+- Architecture:  
+  - Azure file share = cloud endpoint.  
+  - Windows Server folders = server endpoints.  
+  - Sync group links them; optional cloud tiering keeps only hot files locally.  
+
+**Scenarios**  
+- Multiple offices using local file servers with a central Azure copy.  
+- Reducing on‑prem storage while retaining fast local access.  
+
+***
+
+## 9. Data Lake – Azure Data Lake Storage (ADLS)
+
+- A **data lake** is a large, centralized repository that stores **all kinds of raw data** (structured, semi‑structured, unstructured) at any scale for analytics, BI, and ML.[27][28][29]
+- On Azure this is built on **Azure Data Lake Storage Gen2** (enhanced Azure Blob Storage).[30][27]
+
+Key features:  
+- **Hierarchical namespace** – folders/subfolders for efficient big‑data operations.  
+- Stores any format: CSV, JSON, Parquet, images, logs, IoT data, etc.  
+- Integrates with Synapse, Databricks, Data Factory for end‑to‑end analytics pipelines.[28][31][27]
+
+**Usage**  
+- Central landing zone for raw data from all sources.  
+- Source for data warehouses and BI.  
+- Storage for ML training data.  
+

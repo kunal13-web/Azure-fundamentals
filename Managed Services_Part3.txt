@@ -1,0 +1,236 @@
+# Chapter 3 – Azure Managed Services (AZ‑900 Notes)
+
+## 1. Managed Services – Simple Definition
+
+**Managed service (in Azure)**:  
+A cloud service where **Microsoft runs and maintains most of the underlying infrastructure** (servers, OS, patching, scaling, monitoring, backups). You mainly focus on using the service and your app/data, not on managing VMs or hardware.[3][4]
+
+Examples of Azure managed (PaaS / serverless) services:  
+- Azure App Service (Web Apps, APIs)[5]
+- Azure SQL Database, Azure Cosmos DB[2][6]
+- Azure Functions (serverless compute)[7][8]
+- Azure Container Instances (serverless containers)[9][10]
+- Azure Kubernetes Service (managed Kubernetes)[11]
+
+***
+
+## 2. Cloud Service Models (IaaS / PaaS / SaaS)
+
+### 2.1 IaaS – Infrastructure as a Service
+
+You rent **VMs, storage, network**; you manage OS + software.  
+- Example: Windows VM where you **manually install SQL Server** → this is IaaS.[12][1]
+- You are responsible for:
+  - OS updates and patches  
+  - Installing and configuring apps (IIS, SQL Server, etc.)  
+  - Scaling VMs (size/count)  
+
+**Quiz example:**  
+> Installing a SQL Server database manually in a Windows VM is classified as ______.  
+**Answer:** **Infrastructure as a Service (IaaS)**.  
+
+***
+
+### 2.2 PaaS – Platform as a Service
+
+Azure manages OS, runtime, much of security/availability; you deploy code or a database.  
+- Examples: **Azure App Service (Web Apps)**, Azure SQL Database, Azure Functions (as a PaaS-like experience).[13][2][5]
+- You get:
+  - Built‑in **scaling options** (manual or auto)  
+  - Load balancing  
+  - Patching and OS management handled by Azure  
+
+**Quiz example:**  
+> TRUE or FALSE: PaaS solutions like Azure Web Apps provide configuration options to scale (manually or automatically) your apps.  
+**Answer:** **TRUE** – App Service lets you configure manual scale and autoscale rules.[14][5]
+
+***
+
+### 2.3 SaaS – Software as a Service
+
+Complete application delivered over the internet; provider manages everything (infrastructure + platform + app).  
+- Examples: **Microsoft 365 / Office 365, Dynamics 365, Power BI service**.[15][1]
+- Your responsibilities:
+  - Configure app settings (users, permissions, policies)  
+  - Manage your data  
+
+**Quiz example:**  
+> If you are using a SaaS service like Office 365, which is your responsibility?  
+Options:  
+- Defining scaling rules  
+- Maintaining hardware  
+- Configuring SaaS solution  
+
+**Answer:** **Configuring SaaS solution** – scaling and hardware are Microsoft’s job.[1][15]
+
+***
+
+## 3. Microservices – Simple Explanation
+
+**Microservices architecture**: build a big application as many **small, independent services**; each service does one clear job (orders, payments, users) and communicates over APIs.[16][17]
+
+Key ideas:  
+- Each microservice can be **developed, deployed, and scaled independently**.[18][19]
+- Services often have their **own data store** and can use different languages/tech.  
+- Failures are isolated – if one service fails, others can still work.  
+
+Typical usage:  
+- Large e‑commerce or streaming platforms with separate services for product catalog, cart, billing, user profile, etc.[20][16]
+
+***
+
+## 4. Containers and Azure Container Instances (ACI)
+
+### 4.1 What is a container?
+
+- A lightweight, portable unit that packages an application + its dependencies.  
+- Runs the same way on any host that can run containers (like Docker).  
+
+### 4.2 What is Azure Container Instances (ACI)?
+
+**Azure Container Instances (ACI)** is a **serverless container** service:  
+- Run Docker containers **without managing VMs or Kubernetes clusters**.[21][9]
+- You specify image, CPU, memory, and networking; Azure runs the container.  
+- You pay per second for CPU/RAM while the container is running.[22][9]
+
+Common use cases:  
+- Short‑lived jobs (batch processing, image/video processing).  
+- Quickly testing a container image.  
+- Bursting extra capacity without creating full AKS cluster.[23][22]
+
+### 4.3 Step‑by‑Step: Create a container instance (Nginx example)
+
+1. Go to **Create a resource → Container Instances** in Azure portal.[24][25]
+2. **Basics**:  
+   - Subscription, Resource group (e.g. `RG-KK`).  
+   - Container name: `my-nginx-aci`.  
+   - Region: near you.  
+   - Image source: `Docker Hub or other registry`.  
+   - Image type: `Public`.  
+   - Image: `nginx`.  
+   - OS type: `Linux`.  
+3. **Networking**:  
+   - Networking type: **Public**.  
+   - DNS name label: e.g. `kunal-nginx-aci`.  
+   - Port: **80** (TCP).[24]
+4. **Review + create → Create**.  
+5. After deployment, go to the container resource, copy the **FQDN** (like `kunal-nginx-aci.centralindia.azurecontainer.io`) and open `http://FQDN` in browser → Nginx welcome page appears.[26][24]
+
+***
+
+## 5. Container Orchestration (Kubernetes / AKS)
+
+**Container orchestration** = automatically managing many containers across multiple machines:  
+- Scheduling containers on nodes  
+- Scaling up/down  
+- Restarting failed containers  
+- Handling service discovery & load balancing  
+
+Tools: **Kubernetes**, Docker Swarm, etc.[27][28]
+
+Azure’s managed orchestration: **Azure Kubernetes Service (AKS)** – Azure manages the Kubernetes control plane for you.[17][11]
+
+***
+
+## 6. Serverless Computing
+
+**Serverless**: you run code or workloads without managing servers; the cloud provider handles provisioning, scaling, and infrastructure, and you pay only for the **actual execution time**.[29][30]
+
+Key characteristics:  
+- No VM management.  
+- Auto‑scaling based on events (requests, messages, timers).  
+- Event‑driven: functions run only when triggered.[31][32]
+
+Azure serverless examples:  
+- **Azure Functions** (serverless compute)[8][7]
+- Event Grid, Logic Apps, some serverless data services.[2][29]
+
+***
+
+## 7. Azure App Service (Web Apps)
+
+### 7.1 Purpose
+
+Azure App Service is a **PaaS** service to host web apps, REST APIs, and mobile backends without managing servers or IIS/Apache/Nginx.[33][5]
+
+- You deploy **code**, Azure manages the platform: OS, runtime, scaling, load balancing, SSL, auth.[34][5]
+- Supports .NET, Java, Node.js, Python, PHP, etc.[5][14]
+
+### 7.2 Why we need it
+
+- No need to build and patch VMs.  
+- Built‑in **manual scaling and autoscaling**.  
+- Quick CI/CD integration with GitHub/Azure DevOps.[14][5]
+
+### 7.3 Step‑by‑Step: Create a Web App (App Service)
+
+1. In Azure portal, search **App Services → + Create (Web App)**.[35][36]
+2. **Basics**:  
+   - Subscription, Resource group.  
+   - Name: e.g. `kunal-demo-web` → `https://kunal-demo-web.azurewebsites.net`.  
+   - Publish: **Code**.  
+   - Runtime stack: choose (.NET, Node, Python, etc.).  
+   - OS: Linux or Windows.  
+   - Region: near you.  
+3. **App Service plan**:  
+   - Create new plan (e.g. `ASP-kunal-demo`).  
+   - Choose **Free (F1)** or low Basic tier.[37][5]
+4. Skip other tabs → **Review + create → Create**.  
+5. After deployment, go to the Web App and open its **URL** → default “Your web app is running” page appears.[5][14]
+
+***
+
+## 8. Azure Functions (Serverless Functions)
+
+### 8.1 What is Azure Functions?
+
+Azure Functions is a **serverless compute service** for running small bits of code (“functions”) that execute in response to events (HTTP requests, queues, timers, blob changes, etc.). Azure automatically handles server provisioning and scaling; you pay per execution.[7][8]
+
+### 8.2 Step‑by‑Step: Create a Function App + HTTP Trigger
+
+#### A. Create Function App
+
+1. In portal, search **Function App → + Create**.[38][39]
+2. **Basics**:  
+   - Subscription, Resource group.  
+   - Function App name: `kunal-func-demo` (must be globally unique).  
+   - Publish: **Code**.  
+   - Runtime stack: choose (.NET / Node / Python).  
+   - Region: near you.  
+   - OS: Windows or Linux.  
+   - Plan type: **Consumption (Serverless)**.[8][7]
+3. **Review + create → Create** → wait for deployment and **Go to resource**.  
+
+#### B. Add an HTTP trigger function
+
+1. Inside the Function App, open **Functions → + Create**.[39][40]
+2. Select **HTTP trigger** template.  
+3. Function name: `HttpExample`.  
+4. Authorization level: **Anonymous** (for easy testing).  
+5. Click **Create** – Azure generates sample code.  
+
+#### C. Test the function
+
+1. Open the function → **Code + Test**.  
+2. Click **Get Function URL** and copy it.[41]
+3. Paste into browser and optionally add `?name=YourName` parameter:  
+
+   `https://kunal-func-demo.azurewebsites.net/api/HttpExample?name=Kunal`  
+
+4. You should see response like **“Hello, Kunal”** – the function executed successfully.[42][41]
+
+***
+
+## 9. Resource Groups and Clean‑up
+
+A **resource group** is a logical container for your Azure resources (VMs, App Service, Functions, ACI, etc.). Deleting the group deletes everything inside it.[43]
+
+### Deleting a resource group (e.g., `RG-KK`)
+
+1. Portal → search **Resource groups**.  
+2. Click the resource group name `RG-KK` (not just the checkbox).[43]
+3. On the overview page, click **Delete resource group**.  
+4. Type the group name to confirm → click **Delete**.  
+5. Azure deletes all resources in that group (may take a few minutes).[44][43]
+
+***

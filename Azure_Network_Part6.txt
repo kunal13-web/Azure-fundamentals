@@ -1,0 +1,259 @@
+Azure networking lets you build a **private network in the cloud**, connect it to other networks, and secure all traffic with layered security services.[1][2]
+
+***
+
+## Azure networking overview
+
+- Azure provides **Virtual Network (VNet)** as the core building block, similar to your own data‑center network where you control IP ranges, subnets, routing, and security.[2][1]
+- Around VNets you add services for connectivity (peering, VPN, Private Link) and protection (NSG, Azure Firewall, DDoS, Bastion). These are the main exam‑level concepts for AZ‑900.[3][2]
+
+***
+
+## Virtual Network (VNet)
+
+- A VNet is your **private network space in Azure** where resources communicate using private IP addresses, like servers inside a LAN.[4][1]
+- When creating a VNet you choose an IPv4 address space (for example `10.0.0.0/16`) and region; only resources in that region can join that VNet.[5][1]
+
+**Key points**
+
+- VNets are **isolated** from each other by default; no traffic flows between them unless you configure peering or gateways.[6][1]
+- VNets support private communication between VMs, containers, PaaS services with VNet integration, and on‑premises networks via VPN/ExpressRoute.[1][2]
+
+***
+
+## Subnets (explained simply)
+
+- A subnet is a **smaller block of addresses inside the VNet**, like splitting a school building (VNet) into sections/floors for different groups.[7][8]
+- Technically, a subnet gets a subset of the VNet’s address space, e.g. VNet `10.0.0.0/16` contains subnets `10.0.1.0/24` (web) and `10.0.2.0/24` (database).[9][5]
+
+**Why subnets are used**
+
+- **Organize workloads**: Put front‑end, app, and database tiers into separate subnets for clarity and security boundaries.[6][9]
+- **Apply policies**: NSGs and route tables are often applied per subnet, so each subnet gets different access rules or traffic paths.[10][3]
+
+***
+
+## Step‑by‑step: Create a VNet with subnet (portal)
+
+1. Portal → search **Virtual networks** → **+ Create**.[11][5]
+2. Basics: choose subscription, resource group, name (`vnet-demo`), region (e.g., Central India).[5]
+3. IP addresses: keep default address space `10.0.0.0/16`; add subnet `subnet-web` with `10.0.1.0/24`.[12][5]
+4. Security: leave Bastion, Firewall, DDoS as default/disabled for lab.[13][5]
+5. Review + create → Create → open the VNet and verify the subnet under **Subnets** blade.[11][5]
+
+***
+
+## VNet peering
+
+- VNet peering connects **two VNets so they act like one network**, allowing private IP communication across them over Microsoft’s backbone.[14][15]
+- You can peer VNets in the same region (VNet peering) or across regions (Global VNet peering), even across subscriptions, as long as address spaces don’t overlap.[16][14]
+
+**Why peering is used**
+
+- **Hub‑and‑spoke**: One hub VNet with shared services (VPN gateway, firewall) and multiple spoke VNets for app workloads; all spokes peer to the hub.[15][17]
+- **Environment isolation**: Separate VNets for dev, test, prod but still allow controlled communication between them.[14][16]
+
+***
+
+## Azure network security building blocks
+
+### Network Security Group (NSG)
+
+- NSG is a **stateful packet filter** you attach to subnets or NICs to allow/deny traffic by source/destination IP, port, and protocol.[18][19]
+- Contains inbound and outbound rules with priority and allow/deny actions, similar to a basic firewall at the VNet edge or VM level.[19][18]
+
+**Typical NSG usage**
+
+- Allow HTTP/HTTPS (80/443) to web subnet from internet; block all other inbound ports.[18][19]
+- Allow DB subnet to accept traffic only from web subnet on port 1433; deny internet access directly to DB subnet.[19][18]
+
+***
+
+### Azure Firewall
+
+- Azure Firewall is a **managed, stateful, centralized firewall service** that filters traffic between VNets and to/from the internet.[20][21]
+- Provides network and application rules, FQDN/URL filtering, threat‑intelligence based filtering, and optional TLS inspection (Premium SKU).[22][20]
+
+**When to use Azure Firewall vs NSG**
+
+- Use **NSGs** close to workloads for simple allow/deny on subnets/NICs.[18][19]
+- Use **Azure Firewall** in a hub VNet for enterprise‑grade, centralized egress/ingress control, advanced filtering, and logging across multiple VNets.[21][20]
+
+***
+
+### Azure DDoS Protection
+
+- DDoS Protection protects public endpoints against **Distributed Denial of Service attacks** by monitoring traffic and automatically discarding attack traffic.[23][19]
+- Basic protection is always on; **DDoS Protection Standard** adds adaptive tuning per application, alerts, telemetry, and cost‑protection for attack spikes.[24][23]
+
+***
+
+## Private connectivity: Private Link & private endpoints
+
+- **Azure Private Link** lets you access Azure PaaS services (Storage, SQL, Key Vault, etc.) over **private IPs inside your VNet**, not public internet.[25][26]
+- A **private endpoint** is the actual NIC with a private IP in your VNet that maps to a specific service instance (e.g., one storage account).[26][27]
+
+**Benefits**
+
+- Services can have **public access disabled**, accessible only via private endpoint in your VNet.[27][26]
+- Reduces data‑exfiltration risks by allowing a subnet to talk only to specific service resources via Private Link.[28][27]
+- On‑prem networks connected via VPN/ExpressRoute can also reach those services over the same private path.[29][28]
+
+***
+
+## Secure admin access: Bastion host / Azure Bastion
+
+### Bastion host concept
+
+- A bastion host is a **hardened gateway machine** used as the single, controlled entry point to reach internal servers over SSH/RDP.[30][31]
+- Admins log in to the bastion first, then “jump” from it to other internal VMs that have no direct internet access.[31][30]
+
+### Azure Bastion
+
+- Azure Bastion is a **managed bastion host service** providing browser‑based RDP/SSH to VMs over HTTPS (port 443) directly in the portal.[32][33]
+- VMs remain with **only private IPs**, no need to open port 3389/22 to internet, reducing exposure to scanning and brute‑force attacks.[34][32]
+
+**Typical use**
+
+- Deploy Azure Bastion into a subnet named `AzureBastionSubnet` in your VNet.[35][32]
+- From portal, click **Connect → Bastion** on a VM to open RDP/SSH session via Bastion with only private IP connectivity.[33][32]
+
+***
+
+## How your questions fit into this chapter
+
+- **“What is Virtual Network?”**  
+  → VNet = private network in Azure with your own IP ranges and subnets; core building block for all networking.[4][1]
+
+- **“What are subnets (explain like 10‑year‑old)?”**  
+  → Subnets = smaller sections inside VNet (like floors in a school) used to group and secure resources.[8][7]
+
+- **“Step by step guide to create a virtual network”**  
+  → Covered with the portal quickstart steps: create VNet, address space, subnet, then attach a VM.[5][11]
+
+- **“Network peering and Azure security”**  
+  → Peering connects VNets; Azure security includes NSG, Firewall, DDoS, Bastion, all layered for defense‑in‑depth.[36][14][19]
+
+- **“Azure Firewall”**  
+  → Central, managed firewall with advanced filtering, placed usually in a hub VNet.[20][21]
+
+- **“Azure Private Link and endpoint”**  
+  → Private Link = private connectivity tech; private endpoint = NIC with private IP to a specific PaaS resource.[25][26][27]
+
+- **“What is bastion host / Azure Bastion?”**  
+  → Special gateway for secure admin access; Azure Bastion = managed version that removes need for VM public IPs.[32][33][34]
+
+***
+
+You can now copy this into a `chapter-azure-networking.md` file in your GitHub repo, and if you want, the next step can be a small lab section:  
+
+- Create two VNets, peer them, deploy one VM in each, test ping.  
+- Add NSG rules to allow/deny traffic between subnets.
+
+Here is a **complete, no‑step‑skipped, portal‑only** guide to create a Virtual Network for your notes and GitHub.[1][2]
+
+***
+
+## 1. Sign in and open Virtual Networks
+
+1. Open a browser and go to **https://portal.azure.com**.  
+2. Sign in with your Azure account.  
+3. At the top search bar, type **Virtual networks** and click the **Virtual networks** service.[1]
+
+***
+
+## 2. Start VNet creation
+
+4. On the **Virtual networks** page, click **+ Create** (or **+ New** → **Create virtual network**).[2][1]
+5. The **Create virtual network** wizard opens, with several tabs: **Basics, IP addresses, Security, Tags, Review + create**. You will fill them in order.[1]
+
+***
+
+## 3. Basics tab – project and VNet details
+
+6. On the **Basics** tab, under **Project details**:[2][1]
+   - **Subscription**: Select your active subscription.  
+   - **Resource group**:  
+     - Click **Create new**.  
+     - Enter `rg-vnet-demo` and click **OK**.  
+
+7. Under **Instance details**:[1]
+   - **Name**: Enter `vnet-demo`.  
+   - **Region**: Choose a region close to you (for example, `Central India` or `East US 2`).  
+
+8. Leave the other fields on this tab at their default values.  
+9. Click **Next: IP addresses** at the bottom.[1]
+
+***
+
+## 4. IP addresses tab – VNet address space and subnets
+
+10. On the **IP addresses** tab, under **IPv4 address space**, you will see a default range (for example `10.0.0.0/16`). Keep this value for the lab. It defines the total address range of your VNet.[3][1]
+
+11. Scroll down to **Subnets**:  
+    - There is usually one default subnet (for example `default` with `10.0.0.0/24`).  
+    - To keep your notes clear, create a custom subnet:  
+      1. Click **+ Add subnet**.  
+      2. In the **Add subnet** pane:  
+         - **Subnet name**: `subnet-web`.  
+         - **Subnet address range**: `10.0.1.0/24` (this must be inside `10.0.0.0/16` and not overlap other subnets).[3][1]
+         - Leave **Subnet type / Subnet purpose, NSG, Route table, Services** as **None** or default.  
+      3. Click **Add** to create the subnet.  
+
+12. Confirm you now see `subnet-web (10.0.1.0/24)` in the subnet list (and optionally the original `default` subnet).  
+13. Click **Next: Security**.[2][1]
+
+***
+
+## 5. Security tab – Bastion, DDoS, Firewall (for lab: off)
+
+14. On the **Security** tab you will see options like **Bastion**, **DDoS Protection**, and **Firewall**:[4][1]
+    - **Bastion**: Leave **Disable** (you can create it later if needed).  
+    - **DDoS Network Protection**: Keep **Basic** (default) for this lab.  
+    - **Azure Firewall**: Leave **Disabled**.  
+
+15. Do not change other settings on this tab.  
+16. Click **Next: Tags**.[1]
+
+***
+
+## 6. Tags tab – optional metadata
+
+17. On the **Tags** tab you can add key–value pairs for cost/organization (for example, `Environment = Lab`). This is optional.[5]
+18. You may leave tags blank for now.  
+19. Click **Next: Review + create**.[1]
+
+***
+
+## 7. Review + create – final validation and deployment
+
+20. On the **Review + create** tab Azure validates your settings. Wait until you see **Validation passed** at the top.[2][1]
+21. Review the summary carefully:  
+    - Subscription: your subscription.  
+    - Resource group: `rg-vnet-demo`.  
+    - Name: `vnet-demo`.  
+    - Region: your chosen region.  
+    - IPv4 address space: `10.0.0.0/16`.  
+    - Subnets: includes `subnet-web (10.0.1.0/24)`.  
+
+22. Click **Create**.[1]
+23. Wait for deployment to complete (status notification will say **Deployment succeeded**).  
+24. Click **Go to resource** on the deployment success blade.[2][1]
+
+***
+
+## 8. Verify the VNet and subnet
+
+25. You are now on the **vnet-demo** resource page. On the **Overview** blade verify:[5]
+    - **Address space**: shows `10.0.0.0/16`.  
+    - **Subnets**: shows at least one subnet.  
+
+26. In the left‑hand menu, click **Subnets** under **Settings**.  
+27. Confirm that `subnet-web` exists with address range `10.0.1.0/24` and that there is no NSG or route table attached yet (unless you added them).[3]
+
+At this point, the virtual network is fully created with a clean address space and a lab subnet; nothing is missing in the creation path. You can now:
+
+- Create a VM and, on the **Networking** tab of the VM wizard, choose **Virtual network = vnet-demo** and **Subnet = subnet-web** so the VM gets a private IP from this VNet.[6][1]
+
+This sequence (steps 1–27) is what you can paste directly as the **“Step‑by‑step: Create Virtual Network in Azure Portal”** section of your GitHub networking chapter.
+

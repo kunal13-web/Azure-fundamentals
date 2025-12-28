@@ -1,0 +1,192 @@
+Azure VM & VM Scale Set – Step‑by‑Step Notes
+1. Create a Linux Virtual Machine (single VM)
+1.1 Open VM creation wizard
+Sign in to https://portal.azure.com.
+
+In the top search bar, type Virtual machines and open the service.
+
+Click Create → Azure virtual machine.​
+
+1.2 Basics tab
+Subscription: Select your subscription.
+
+Resource group: Click Create new (example: RG-KK).
+
+Virtual machine name: e.g. my-first-vm.
+
+Region: Choose a nearby region (e.g. Central India, East US).
+
+Availability options: Leave default (for AZ‑900 labs you can keep “No infrastructure redundancy required”).
+
+Image: Select Ubuntu Server 22.04 LTS (or similar).​
+
+Size: Choose a small size (e.g. B1s or B2ats_v2 depending on free‑trial limits).
+
+Administrator account:
+
+Authentication type: SSH public key.
+
+Username: e.g. azureuser.
+
+Key source: Generate new key pair.
+
+Key pair name: e.g. myKey.
+
+Inbound port rules:
+
+Public inbound ports: Allow selected ports.
+
+Select SSH (22) and HTTP (80) so you can connect and test Nginx later.​
+
+Click Next until you reach Review + create, then click Create.
+Download the private key (if Azure asks) and keep it safe.​
+
+1.3 Connect to the VM with SSH
+In the portal, open Virtual machines → my-first-vm.
+
+Click Connect → SSH.
+
+Use either Azure Cloud Shell or your local terminal:
+
+bash
+ssh azureuser@<public-ip-address>
+Accept the fingerprint prompt and log in.​
+
+1.4 Install Nginx manually (inside the VM)
+Run these commands inside the SSH session:
+
+bash
+sudo apt update
+sudo apt install nginx -y
+sudo systemctl start nginx
+sudo systemctl enable nginx
+sudo systemctl status nginx   # should show active (running)
+1.5 Test Nginx from browser
+From the VM Overview page, copy the Public IP address.
+
+In your browser, open:
+
+http://<public-ip>
+
+You should see the “Welcome to nginx!” default page, confirming that the VM + Nginx is working.​
+
+2. Create a Virtual Machine Scale Set (VMSS) with Nginx
+Goal: have multiple identical VMs behind a load balancer, each serving an Nginx page.​
+
+2.1 Open VMSS creation wizard
+In the Azure portal search bar, type Virtual machine scale set and open the service.
+
+Click + Create → Virtual machine scale set.
+​
+
+2.2 Basics tab
+Subscription: your subscription.
+
+Resource group: e.g. RG-KK (reuse or create new).
+
+Virtual machine scale set name: e.g. vmss-nginx.
+
+Region: e.g. Korea Central or your chosen region.
+
+Orchestration mode: Uniform (simple for AZ‑900 labs).​
+
+Image: Ubuntu Server 22.04 LTS.
+
+Instance size: choose a small size (e.g. Standard_B2ats_v2).
+
+Initial instance count: 2 (so you get two VMs in the scale set).
+
+Authentication:
+
+Type: SSH public key.
+
+Username: e.g. azureuser.
+
+Generate / use SSH key pair as required.
+
+2.3 Disks and Networking (key points)
+Disks: keep default OS disk (Standard SSD is fine for labs).
+
+Networking:
+
+Create or choose a virtual network and subnet.
+
+Ensure Public load balancer is enabled so you get one public IP for the entire VMSS.
+
+Inbound ports: allow at least SSH (22) and HTTP (80).
+​
+
+2.4 Advanced tab – Custom data (install Nginx on each node)
+In Advanced → Custom data, paste this script:
+
+bash
+#!/bin/bash
+apt-get update -y
+apt-get install -y nginx
+
+echo "<html><body>
+<h1>Welcome to Azure VMSS</h1>
+<h2>Served from: $(hostname)</h2>
+</body></html>" > /var/www/html/index.nginx-debian.html
+
+systemctl enable nginx
+systemctl restart nginx
+This runs at first boot on every VM in the scale set.
+
+It installs Nginx and replaces the default page with one showing the server hostname, so you can see which node handled the request.
+​
+
+Click Review + create → Create and wait until deployment completes.​
+
+2.5 Test the VMSS through the load balancer
+Open vmss-nginx in the portal.
+
+On the overview, note the Public IP address (this belongs to the load balancer front‑end).
+
+Open http://<public-ip> in your browser.
+
+Refresh the page multiple times.
+
+You should see the hostname in the page changing (e.g. vmss-nginx_0, vmss-nginx_1), proving that requests are going to different VM instances.
+​
+
+3. Scale Out and Scale In (change instance count)
+3.1 View instances
+In the VMSS menu, click Instances.
+
+You will see each VM instance (e.g. vmss-nginx_0, vmss-nginx_1) and their status.​
+
+3.2 Manually scale out (add instances)
+Go to Scaling (or Settings → Scaling, depending on portal layout).
+
+Change Instance count from 2 to 3.
+
+Click Save.
+
+In the Instances tab, a third VM appears and eventually shows status Succeeded/Running.
+​
+
+3.3 Manually scale in (remove instances)
+Again go to Scaling.
+
+Reduce Instance count (for example from 3 back to 1).
+
+Click Save.
+
+Azure will delete extra instances, leaving only the target count running.
+​
+
+4. Cleaning Up Public IPs and VMSS
+When you delete a VMSS, its load balancer and public IP might remain if “delete related resources” was not selected.
+
+A Public IP cannot be deleted while it is still associated with a network interface or load balancer front‑end.
+
+To delete a stuck Public IP:
+
+Open the associated Load balancer.
+
+Go to Frontend IP configuration and edit the config.
+
+Set Public IP address = None and save.
+
+Now go back to Public IP addresses and delete the IP resource.
